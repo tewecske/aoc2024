@@ -1,5 +1,15 @@
 package common
 
+
+extension (a: Long) {
+  inline def digits = math.log10(a.toDouble).toInt + 1
+  inline def ||(b: Long) = (a * math.pow(10, b.digits)).toLong + b
+  inline def split = {
+    val s = math.pow(10, a.digits / 2).toLong
+    ((a / s).toLong, (a % s))
+  }
+}
+
 enum Direction(val x: Int, val y: Int) {
   case N extends Direction(-1, 0)
   case E extends Direction(0, 1)

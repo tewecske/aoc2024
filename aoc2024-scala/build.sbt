@@ -1,5 +1,10 @@
 val scala3Version = "3.5.2"
 
+javaOptions in Global ++= Seq(
+  "-Xmx2048M",
+  "-XX:+UseG1GC",
+)
+
 scalacOptions ++= Seq(
   "-no-indent",
 )
