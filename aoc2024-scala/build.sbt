@@ -14,6 +14,7 @@ lazy val root = project
 
     // https://mvnrepository.com/artifact/com.lihaoyi/os-lib
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.11.3",
+    libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
     // https://mvnrepository.com/artifact/org.scalatest/scalatest
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % Test,
   )
