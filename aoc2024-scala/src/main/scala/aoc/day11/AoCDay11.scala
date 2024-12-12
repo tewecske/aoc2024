@@ -27,8 +27,8 @@ def day11(): Unit = {
 
     val lines2 = """125 17"""
   val start = System.currentTimeMillis()
-  // println(day11part1(lines.toList.head.split(" ").map(_.toLong)))
-  println(day11part1(lines2.split(" ").map(_.toLong)))
+  println(day11part1(lines.toList.head.split(" ").map(_.toLong)))
+  // println(day11part1(lines2.split(" ").map(_.toLong)))
   // println(day11part2(lines.mkString))
   // println(day11part2(lines2))
   val endTime = System.currentTimeMillis()
@@ -66,9 +66,8 @@ def day11part1(line: Array[Long]): Long = {
   def fixMap(v: mutable.Map[Long, Long], m: mutable.Map[Long, Long]): mutable.Map[Long, Long] = {
     val mImm = m.toMap
     v.foldLeft(m){ case (acc, (l, size)) => 
-      println(s"mImm($l): ${mImm.get(l)} acc($l) ${acc.getOrElse(l, 0L)} size: $size")
-      acc.update(l, acc.getOrElse(l, 0L) + mImm.getOrElse(l, 1L) * size)
-      // println(s"acc: ${acc.toList.sorted.mkString(",")}")
+      // println(s"mImm($l): ${mImm.get(l)} acc($l) ${acc.getOrElse(l, 0L)} size: $size")
+      acc.update(l, mImm.getOrElse(l, 0L) + size)
       acc
     }
     m
@@ -95,9 +94,8 @@ def day11part1(line: Array[Long]): Long = {
 
   val allMap = mutable.Map.empty[Long, Long]
   fix(line.toVector, allMap)
-  // println(s"allMap: ${allMap.mkString(",")}")
 
-  (1 to 25).foreach { ii =>
+  (1 to 75).foreach { ii =>
     println(s"ii: $ii")
     val tempMaps = mutable.ListBuffer.empty[mutable.Map[Long, Long]]
     val allMapImm = allMap.toMap
@@ -107,18 +105,14 @@ def day11part1(line: Array[Long]): Long = {
         val tempMap = mutable.Map.empty[Long, Long]
         fix(memo(Vector(mapK)), tempMap)
         tempMap.mapValuesInPlace((k ,v) => v * mapV)
-        println(s"$mapK -> tempMap: ${tempMap.toList.sorted.mkString(",")}")
+        // println(s"$mapK -> tempMap: ${tempMap.toList.sorted.mkString(",")}")
         tempMaps.addOne(tempMap)
       }
     allMap.clear()
     tempMaps.foreach { tempMap =>
       fixMap(tempMap, allMap)
     }
-    // allMapImm.foreach { (mapK, mapV) =>
-    //   allMap.update(mapK, allMap(mapK) - mapV)
-    //   if (allMap(mapK) == 0L) allMap.remove(mapK)
-    // }
-    println(s"allMap: ${allMap.toList.sorted.mkString(",")}")
+    // println(s"allMap: ${allMap.toList.sorted.mkString(",")}")
   }
 
 
