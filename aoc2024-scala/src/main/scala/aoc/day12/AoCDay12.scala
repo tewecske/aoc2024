@@ -136,48 +136,49 @@ def day12part1(line: List[String]): Long = {
   // grid.draw() 
 
   val data2 = components.map { case (root, g) =>
-    val group = g.toSet
+    val region = g.toSet
     val rootPlant = grid.at(root).get
 
-    val perimeterWithOutside = group.flatMap(node => 
-        node.allCross.filter(!group.contains(_)).map(out => (node, out))
+    // https://www.youtube.com/watch?v=glNiVe_Rztg
+    val perimeter = region.flatMap(node => 
+        node.allCross.filter(!region.contains(_)).map(out => (node, out))
     )
 
-    val sidesOnly = perimeterWithOutside.filterNot { case (p1, p2) =>
-      perimeterWithOutside(p1.down, p2.down) || perimeterWithOutside(p1.right, p2.right)
+    val sides = perimeter.filterNot { case (p1, p2) =>
+      perimeter(p1.down, p2.down) || perimeter(p1.right, p2.right)
     }.size
     
 
-    val perimeter = group.filter(_.surrounding.exists(!group.contains(_)))
+    val perimeterTouching = region.filter(_.surrounding.exists(!region.contains(_)))
 
-    val sides = perimeter.iterator.map { coord =>
+    val sidesWalked = perimeterTouching.iterator.map { coord =>
       // coord is adjacent to the outside, each contributes 1 side
       // oo
       // o#
-      val topLeft = !group(coord.up) && !group(coord.left)
+      val topLeft = !region(coord.up) && !region(coord.left)
       // oo
       // #o
-      val topRight = !group(coord.up) && !group(coord.right)
+      val topRight = !region(coord.up) && !region(coord.right)
       // o#
       // oo
-      val botLeft = !group(coord.down) && !group(coord.left)
+      val botLeft = !region(coord.down) && !region(coord.left)
       // #o
       // oo
-      val botRight = !group(coord.down) && !group(coord.right)
+      val botRight = !region(coord.down) && !region(coord.right)
 
       // coord is diagonal to the outside, the shape has turned a corner
       // o#
       // ##
-      val diagUpLeft = group(coord.up) && group(coord.left) && !group(coord.up.left)
+      val diagUpLeft = region(coord.up) && region(coord.left) && !region(coord.up.left)
       // #o
       // ##
-      val diagUpRight = group(coord.up) && group(coord.right) && !group(coord.up.right)
+      val diagUpRight = region(coord.up) && region(coord.right) && !region(coord.up.right)
       // ##
       // #o
-      val diagBotLeft = group(coord.down) && group(coord.left) && !group(coord.down.left)
+      val diagBotLeft = region(coord.down) && region(coord.left) && !region(coord.down.left)
       // ##
       // o#
-      val diagBotRight = group(coord.down) && group(coord.right) && !group(coord.down.right)
+      val diagBotRight = region(coord.down) && region(coord.right) && !region(coord.down.right)
 
       // println(s"$rootPlant $coord $topLeft, $topRight, $botLeft, $botRight, $diagUpLeft, $diagUpRight, $diagBotLeft, $diagBotRight")
       Seq(topLeft, topRight, botLeft, botRight, diagUpLeft, diagUpRight, diagBotLeft, diagBotRight)
@@ -186,7 +187,7 @@ def day12part1(line: List[String]): Long = {
 
     // println(s"$rootPlant group: ${group.size} sides: ${sides}")
     // println(s"$rootPlant group: ${group.size} sides: ${sides} sidesOnly: $sidesOnly")
-    (rootPlant, sidesOnly, group.size)
+    (rootPlant, sides, region.size)
   }
 
   val r1 = data.map { case (plant, perimeter, area) =>
