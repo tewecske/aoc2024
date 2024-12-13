@@ -133,12 +133,20 @@ def day12part1(line: List[String]): Long = {
       case None => true
     }).size).sum, group.size)
   }
-  grid.draw() 
+  // grid.draw() 
 
   val data2 = components.map { case (root, g) =>
     val group = g.toSet
     val rootPlant = grid.at(root).get
-    println(s"INIT $rootPlant $group")
+
+    val perimeterWithOutside = group.flatMap(node => 
+        node.allCross.filter(!group.contains(_)).map(out => (node, out))
+    )
+
+    val sidesOnly = perimeterWithOutside.filterNot { case (p1, p2) =>
+      perimeterWithOutside(p1.down, p2.down) || perimeterWithOutside(p1.right, p2.right)
+    }.size
+    
 
     val perimeter = group.filter(_.surrounding.exists(!group.contains(_)))
 
@@ -171,13 +179,14 @@ def day12part1(line: List[String]): Long = {
       // o#
       val diagBotRight = group(coord.down) && group(coord.right) && !group(coord.down.right)
 
-      println(s"$rootPlant $coord $topLeft, $topRight, $botLeft, $botRight, $diagUpLeft, $diagUpRight, $diagBotLeft, $diagBotRight")
+      // println(s"$rootPlant $coord $topLeft, $topRight, $botLeft, $botRight, $diagUpLeft, $diagUpRight, $diagBotLeft, $diagBotRight")
       Seq(topLeft, topRight, botLeft, botRight, diagUpLeft, diagUpRight, diagBotLeft, diagBotRight)
           .count(identity)
     }.sum
 
-    println(s"$rootPlant group: ${group.size} sides: ${sides}")
-    (rootPlant, sides, group.size)
+    // println(s"$rootPlant group: ${group.size} sides: ${sides}")
+    // println(s"$rootPlant group: ${group.size} sides: ${sides} sidesOnly: $sidesOnly")
+    (rootPlant, sidesOnly, group.size)
   }
 
   val r1 = data.map { case (plant, perimeter, area) =>
@@ -187,7 +196,7 @@ def day12part1(line: List[String]): Long = {
   }.sum
   val r2 = data2.map { case (plant, sides, area) =>
     val plantCost = area * sides
-    println(s"$plant $area * $sides = ${plantCost}")
+    // println(s"$plant $area * $sides = ${plantCost}")
     plantCost
   }.sum
   println(s"Result1: ${r1}")
