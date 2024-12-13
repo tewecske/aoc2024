@@ -25,10 +25,13 @@ case class Coord(x: Int, y: Int) {
   def down: Coord = copy(y = y + 1)
   def left: Coord = copy(x = x - 1)
   def allCross: List[Coord] = List(up, right, down, left)
+  def surrounding: List[Coord] = List(up, right, down, left, up.right, right.down, down.left, left.up)
 }
 case class Size(height: Int, width: Int)
 case class Grid[A](grid: Array[Array[A]]) {
-  val size = Size(grid.length, grid.head.length)
+  val height = grid.length
+  val width = grid.head.length
+  val size = Size(height, width)
   val lookup = (for { 
     x <- 0 until size.height
     y <- 0 until size.width
