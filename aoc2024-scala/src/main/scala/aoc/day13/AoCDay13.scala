@@ -65,75 +65,41 @@ Prize: X=18641, Y=10279"""
   ).toList
 
   // println(day13part1(parse(lines.mkString("\n")))) // 39748
-  println(day13part1(parse(lines2)))
+  // println(day13part1(parse(lines2)))
+  println(day13part1(parse2(lines.mkString("\n")))) // 74478585072604
   // println(day13part1(parse2(lines2)))
   // println(day13part2(lines.mkString))
   // println(day13part2(lines2))
   val endTime = System.currentTimeMillis()
   println(s"Solved in: ${endTime - start} ms")
 }
-
+// part 2 hint: https://github.com/scarf005/aoc-scala/blob/main/2024/day13.scala
 def day13part1(list: List[ClawMachine]): Long = {
-
-  def findPossibleRecur(aMax: Long, bMax: Long, a: Long, b: Long, p: Long, acc: Seq[(Long, Long, Long)] = Seq.empty): Seq[(Long, Long, Long)] = {
-    @tailrec def findA(aMax: Long, bMax: Long, a: Long, b: Long, p: Long, acc: Seq[(Long, Long, Long)] = Seq.empty): Seq[(Long, Long, Long)] = {
-      val ra = aMax * a
-      val rb = bMax * b
-      val r = ra + rb
-      println(s"ra: $ra rb: $rb r: $r")
-      if (aMax == 1) acc
-      else {
-        val newAcc = if (r == p) acc :+ (aMax, bMax, r) else acc
-        findA(aMax - 1, bMax, a, b, p, newAcc ++ findB(aMax - 1, bMax, a, b, p))
-      }
-    }
-    @tailrec def findB(aMax: Long, bMax: Long, a: Long, b: Long, p: Long, acc: Seq[(Long, Long, Long)] = Seq.empty): Seq[(Long, Long, Long)] = {
-      val ra = aMax * a
-      val rb = bMax * b
-      val r = ra + rb
-      println(s"ra: $ra rb: $rb r: $r")
-      if (bMax == 1) acc
-      else {
-        if (r == p) acc :+ (aMax, bMax, r)
-        else findB(aMax, bMax - 1, a, b, p, acc)
-      }
-    }
-    
-    findA(aMax, bMax, a, b, p)
-  }
 
   val r1 = list.map { cm =>
     println(s"Claw Machine: ${cm}")
-    val axMax = cm.px/cm.ax
-    val bxMax = cm.px/cm.bx
-    val ayMax = cm.py/cm.ay
-    val byMax = cm.py/cm.by
-
-    println(s"axMax: $axMax, bxMax: $bxMax")
-    val possibleX = findPossibleRecur(axMax, bxMax, cm.ax, cm.bx, cm.px)
-    println(s"possibleX: ${possibleX.mkString(",")}")
-
-
-    println(s"ayMax: $ayMax, byMax: $byMax")
-    val possibleY = findPossibleRecur(ayMax, byMax, cm.ay, cm.by, cm.py)
-    println(s"possibleY: ${possibleY.mkString(",")}")
-
-    if (possibleX.isEmpty || possibleY.isEmpty) {
-      // println("ERROR")
-      0
-    } else {
-      val possibles = for {
-        (ax, bx, _) <- possibleX
-        (ay, by, _) <- possibleY
-        if ax == ay && bx == by
-      } yield (ax, bx)
-
-      // println(s"possibles: ${possibles.mkString}")
-
-      possibles.take(1).map(_ * 3 + _ * 1).sum
-    }
+    // a * ax + b * bx = px , a * ay + b * by = py
+    // a = (px - b * bx) / ax , a = (py - b * by) / ay
+    // (px - b * bx) / ax = (py - b * by) / ay
+    // (px - b * bx) * ay = (py - b * by) * ax
+    // px * ay - b * bx * ay = py * ax - b * by * ax
+    // px * ay - py * ax = b * bx * ay - b * by * ax
+    // px * ay - py * ax = b * (bx * ay - by * ax)
+    // b = (px * ay - py * ax) / (bx * ay - by * ax)
+    // a = (px - b * bx) / ax
+      
+      val b1 = cm.px * cm.ay - cm.py * cm.ax
+      val b2 = cm.bx * cm.ay - cm.by * cm.ax
+      if (b2 != 0 && b1 % b2 == 0) {
+        val b = b1 / b2
+        val a1 = cm.px - b * cm.bx
+        val a2 = cm.ax
+        if (a2 != 0 && a1 % a2 == 0) {
+          val a = a1 / a2
+          a * 3 + b
+        } else 0
+      } else 0
   }.sum
-
 
 
   // val r1 = 0
