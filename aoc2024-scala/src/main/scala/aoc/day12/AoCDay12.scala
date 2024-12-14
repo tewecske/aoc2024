@@ -145,7 +145,8 @@ def day12part1(line: List[String]): Long = {
     )
 
     val sides = perimeter.filterNot { case (p1, p2) =>
-      perimeter(p1.down, p2.down) || perimeter(p1.right, p2.right)
+      // perimeter(p1.down, p2.down) || perimeter(p1.right, p2.right)
+      Seq((p1.down, p2.down), (p1.right, p2.right)).exists(perimeter)
     }.size
     
 
