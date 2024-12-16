@@ -1,5 +1,7 @@
 package common
 
+import scala.reflect.ClassTag
+
 
 extension (a: Long) {
   inline def digits = math.log10(a.toDouble).toInt + 1
@@ -15,8 +17,22 @@ enum Direction(val x: Int, val y: Int) {
   case E extends Direction(0, 1)
   case S extends Direction(1, 0)
   case W extends Direction(0, -1)
-}
 
+  def opposite: Direction = this match {
+    case N => S
+    case E => W
+    case S => N
+    case W => E
+  }
+}
+object Direction {
+  def apply(c: Char) = c match {
+    case '^' => N
+    case '>' => E
+    case 'v' => S
+    case '<' => W
+  }
+}
 
 case class Coord(x: Int, y: Int) {
   def move(dir: Direction): Coord = Coord(x + dir.x, y + dir.y)
@@ -28,7 +44,7 @@ case class Coord(x: Int, y: Int) {
   def surrounding: List[Coord] = List(up, right, down, left, up.right, right.down, down.left, left.up)
 }
 case class Size(height: Int, width: Int)
-case class Grid[A](grid: Array[Array[A]]) {
+case class Grid[A: ClassTag](grid: Array[Array[A]]) {
   val height = grid.length
   val width = grid.head.length
   val size = Size(height, width)
@@ -62,6 +78,10 @@ case class Grid[A](grid: Array[Array[A]]) {
     }
   }
 
+  def update(c: Coord, a: A) = {
+    grid(c.x).update(c.y, a)
+  }
+
   def drawWith(xys: List[(Int, Int)]): Unit = {
     for { 
       x <- 0 until size.height
@@ -71,6 +91,16 @@ case class Grid[A](grid: Array[Array[A]]) {
       else print(at(x, y))
       if (y + 1 == size.width) println
     }
+  }
+
+  def enlargeY(replace: Map[A, Seq[A]]): Grid[A] = {
+      Grid(grid.map { r =>
+        (for { 
+          y <- 0 until size.width
+        } yield {
+          replace.getOrElse(r(y), Seq(r(y), r(y)))
+        }).flatten.toArray
+      })
   }
 
 }
