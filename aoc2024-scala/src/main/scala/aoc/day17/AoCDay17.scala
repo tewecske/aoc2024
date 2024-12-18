@@ -28,14 +28,14 @@ def debug[A](a: A): Unit = {
 // Combo operand 6 represents the value of register C.
 // Combo operand 7 is reserved and will not appear in valid programs.
 sealed trait Combo
-case class Literal(value: Int) extends Combo
+case class Literal(value: Long) extends Combo
 case object RegA extends Combo
 case object RegB extends Combo
 case object RegC extends Combo
 case object Invalid extends Combo
 
 object Combo:
-  def apply(operand: Int) =
+  def apply(operand: Long) =
     operand match
       case 0 => Literal(0)
       case 1 => Literal(1)
@@ -66,7 +66,7 @@ def show(opcode: Opcode) = opcode match
   case Bdv(combo) => s"Bdv($combo) b = a / 2 ^ $combo"
   case Cdv(combo) => s"Cdv($combo) c = a / 2 ^ $combo"
 
-def parseOpcode(opcode: Int, operand: Int) =
+def parseOpcode(opcode: Long, operand: Long) =
   opcode match
     case 0 => Adv(Combo(operand))
     case 1 => Bxl(Literal(operand))
@@ -78,7 +78,7 @@ def parseOpcode(opcode: Int, operand: Int) =
     case 7 => Cdv(Combo(operand))
 
 
-def parseInstructions(ins: List[Int]) =
+def parseInstructions(ins: List[Long]) =
   ins.sliding(2, 2).map { l =>
     val opcode = l(0)
     val operand = l(1)
@@ -86,8 +86,8 @@ def parseInstructions(ins: List[Int]) =
   }.toList
 
 
-case class Registers(a: Int, b: Int, c: Int)
-case class ProgramState(registers: Registers, instructions: List[Opcode], raw: List[Int], pointer: Int = 0)
+case class Registers(a: Long, b: Long, c: Long)
+case class ProgramState(registers: Registers, instructions: List[Opcode], raw: List[Long], pointer: Int = 0)
 
 
 def day17(): Unit = {
@@ -125,7 +125,7 @@ Register C: 0
 
 Program: 0,3,5,4,3,0"""
 
-    val part2Check1 = s"""Register A: ${506365-8192}
+    val part2Check1 = s"""Register A: ${108107574778365L}
 Register B: 0
 Register C: 0
 
@@ -141,10 +141,10 @@ Program: 2,4,1,3,7,5,4,0,1,3,0,3,5,5,3,0"""
         s"Register C: $c",
         s"",
         s"Program: $instructions") => 
-        val ins = instructions.split(",").toList.map(_.toInt)
+        val ins = instructions.split(",").toList.map(_.toLong)
         val parsedInstructions = parseInstructions(ins)
         println(instructions.split(",").toList.sliding(2, 2).zip(parsedInstructions.map(show)).mkString("\n"))
-        ProgramState(Registers(a.toInt, b.toInt, c.toInt), parsedInstructions, ins)
+        ProgramState(Registers(a.toLong, b.toLong, c.toLong), parsedInstructions, ins)
     }
   }
 
@@ -161,7 +161,7 @@ Program: 2,4,1,3,7,5,4,0,1,3,0,3,5,5,3,0"""
   println(s"Solved in: ${endTime - start} ms")
 }
 
-@tailrec def loop(programState: ProgramState, output: List[Int] = List.empty[Int]): List[Int] = 
+@tailrec def loop(programState: ProgramState, output: List[Long] = List.empty[Long]): List[Long] = 
   debug("--------------")
   def evalCombo(combo: Combo) =
     combo match
@@ -190,15 +190,15 @@ Program: 2,4,1,3,7,5,4,0,1,3,0,3,5,5,3,0"""
     val current = programState.instructions(programState.pointer)
     printOp(current)
     val (nextState, nextOutput) = current match
-      case Adv(combo) => (programState.copy(pointer = ptr + 1, registers = regs.copy(a = regs.a / Math.pow(2.toDouble, evalCombo(combo).toDouble).toInt)), output)
+      case Adv(combo) => (programState.copy(pointer = ptr + 1, registers = regs.copy(a = regs.a / Math.pow(2.toDouble, evalCombo(combo).toDouble).toLong)), output)
       case Bxl(literal) => (programState.copy(pointer = ptr + 1, registers = regs.copy(b = regs.b ^ literal.value)), output)
       case Bst(combo) => (programState.copy(pointer = ptr + 1, registers = regs.copy(b = evalCombo(combo) % 8)), output)
       case Jnz(literal) if regs.a == 0 => (programState.copy(pointer = ptr + 1), output)
-      case Jnz(literal) => debug("==================="); (programState.copy(pointer = literal.value / 2), output)
+      case Jnz(literal) => debug("==================="); (programState.copy(pointer = 0/*literal.value / 2*/), output)
       case Bxc => (programState.copy(pointer = ptr + 1, registers = regs.copy(b = regs.b ^ regs.c)), output)
       case Out(combo) => (programState.copy(pointer = ptr + 1), output :+ (evalCombo(combo) % 8))
-      case Bdv(combo) => (programState.copy(pointer = ptr + 1, registers = regs.copy(b = regs.a / Math.pow(2.toDouble, evalCombo(combo).toDouble).toInt)), output)
-      case Cdv(combo) => (programState.copy(pointer = ptr + 1, registers = regs.copy(c = regs.a / Math.pow(2.toDouble, evalCombo(combo).toDouble).toInt)), output)
+      case Bdv(combo) => (programState.copy(pointer = ptr + 1, registers = regs.copy(b = regs.a / Math.pow(2.toDouble, evalCombo(combo).toDouble).toLong)), output)
+      case Cdv(combo) => /*println(s"Cdv(combo) $combo ${evalCombo(combo)}");*/ (programState.copy(pointer = ptr + 1, registers = regs.copy(c = regs.a / Math.pow(2.0d, evalCombo(combo).toDouble).toLong)), output)
   
     debug(nextState.registers)
     debug(nextOutput)
@@ -231,7 +231,7 @@ def day17part2(programState: ProgramState): Long = {
   // println(s"Registers(51342988,4,0)")
   // println(s"b=${4 ^ 3} (List(1, 3),Bxl(Literal(3)) b = b xor Literal(3))")
   // println(s"Registers(51342988,7,0)")
-  // println(s"c=${(51342988 / Math.pow(2.0, 7)).toInt} (List(7, 5),Cdv(RegB) c = a / 2 ^ b)")
+  // println(s"c=${(51342988 / Math.pow(2.0, 7)).toLong} (List(7, 5),Cdv(RegB) c = a / 2 ^ b)")
   // println(s"Registers(51342988,7,401117)")
   // println(s"b=${7 ^ 401117} (List(4, 0),Bxc b = b xor c)")
   // println(s"Registers(51342988,401114,401117)")
@@ -256,7 +256,7 @@ def day17part2(programState: ProgramState): Long = {
   // r1.sliding(2).foreach(s => println(s"s(1) - s(0) ${s(1) - s(0)}"))
   // println("===============")
 
-  // val r2 = Iterator.iterate((List.empty[Int], 465405, 1)) { case (ps, i, c8) =>
+  // val r2 = Iterator.iterate((List.empty[Long], 465405, 1)) { case (ps, i, c8) =>
   //   val result = loop(programState.copy(registers = programState.registers.copy(a = i)))
   //   if (c8 == 8)
   //     (result, i + 466944, 1)
@@ -264,22 +264,37 @@ def day17part2(programState: ProgramState): Long = {
   //     (result, i + 8192, c8 + 1)
   // }.take(1000).filter(_._1.slice(0, 6) == List(2, 4, 1, 3, 7, 5)).toList
 
-  val r2 = Iterator.iterate((List.empty[Int], 1546749)) { case (ps, i) =>
-    val result = loop(programState.copy(registers = programState.registers.copy(a = i)))
-    (result, i + 4194304)
-  }.take(510).filter(_._1.slice(0, 8) == List(2, 4, 1, 3, 7, 5, 4, 0)).toList
+  // val r2 = Iterator.iterate((List.empty[Long], 1546749L)) { case (ps, i) =>
+  //   val result = loop(programState.copy(registers = programState.registers.copy(a = i)))
+  //   (result, i + 4194304L)
+  // }.take(10000).filter(_._1.slice(0, 10) == List(2, 4, 1, 3, 7, 5, 4, 0, 1, 3)).toList
 
-  println("===============")
-  println(r2.mkString(","))
-  r2.sliding(2).foreach(s => println(s"s(1) - s(0) ${s(1)._2 - s(0)._2}"))
-  println("===============")
+  // val r2 = Iterator.iterate((List.empty[Long], 3247938045L)) { case (ps, i) =>
+  //   val result = loop(programState.copy(registers = programState.registers.copy(a = i)))
+  //   (result, i + 8589934592L)
+  // }.take(100000).filter(_._1.slice(0, 16) == List(2, 4, 1, 3, 7, 5, 4, 0, 1, 3, 0, 3, 5, 5, 3, 0)).toList
+
+  //8589934592
+  //108107574778365
+  val r2 = 108107574778365L
+
+
+  // println("===============")
+  // println(r2.mkString(","))
+  // r2.sliding(2).foreach(s => println(s"s(1) - s(0) ${s(1)._2 - s(0)._2}"))
+  // println("===============")
+  // println(s"${108116164712957L - 8589934592L}")
 
   // val r1 = (300000000 to 400000000).par.find { i =>
   //   val result = loop(programState.copy(registers = programState.registers.copy(a = i)))
   //   result == programState.raw
   // }
 
-  // println(s"Result1: ${r1}")
+  println(s"Result2: ${r2}")
+
+  val input = List(2, 4, 1, 3, 7, 5, 4, 0, 1, 3, 0, 3, 5, 5, 3, 0)
+  println(input.tails.toList.reverse.tail)
+  println(Iterator.iterate(0L)( _ << 3).take(8).toList)
 
   0
 }
