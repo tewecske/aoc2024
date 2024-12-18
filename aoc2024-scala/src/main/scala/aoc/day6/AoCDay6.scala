@@ -22,8 +22,7 @@ def debug(str: String): Unit = {
 def day6(): Unit = {
   val lines = os.read.lines.stream(os.resource / "aoc/day6/day6_input")
 
-    val lines2 =
-"""....#.....
+    val lines2 = """....#.....
 .........#
 ..........
 ..#.......
@@ -506,6 +505,7 @@ def day6part2mam(lines: List[String]): Unit = {
       case None      => updated
       case Some('.') => getPath(x + dir._1, y + dir._2, dir, updated)
       case Some('#') => getPath(x, y, (dir._2, -dir._1), updated)
+      case _ => updated
     }
   }
 

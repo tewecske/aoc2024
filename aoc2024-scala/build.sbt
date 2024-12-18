@@ -1,13 +1,13 @@
-val scala3Version = "3.5.2"
+val scala3Version = "3.6.2"
 
 javaOptions in Global ++= Seq(
   "-Xmx2048M",
   "-XX:+UseG1GC",
 )
 
-scalacOptions ++= Seq(
-  "-no-indent",
-)
+// scalacOptions ++= Seq(
+//   "-no-indent",
+// )
 
 lazy val root = project
   .in(file("."))

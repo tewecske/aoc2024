@@ -18,6 +18,19 @@ enum Direction(val x: Int, val y: Int) {
   case S extends Direction(1, 0)
   case W extends Direction(0, -1)
 
+  def all = Seq(N, E, S, W)
+  def cw = this match {
+    case N => E
+    case E => S
+    case S => W
+    case W => N
+  }
+  def ccw = this match {
+    case N => W
+    case E => N
+    case S => E
+    case W => S
+  }
   def opposite: Direction = this match {
     case N => S
     case E => W
