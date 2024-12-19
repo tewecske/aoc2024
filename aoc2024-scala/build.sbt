@@ -1,7 +1,7 @@
 val scala3Version = "3.6.2"
 
 javaOptions in Global ++= Seq(
-  "-Xmx2048M",
+  "-Xmx8192M",
   "-XX:+UseG1GC",
 )
 
