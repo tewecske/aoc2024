@@ -72,13 +72,6 @@ def day18(): Unit = {
 // part 2 hint: https://github.com/scarf005/aoc-scala/blob/main/2024/day18.scala
 def day18part1(in: Board, walls: List[Loc]): Long = {
 
-  extension (b: Board)
-    def draw() = 
-      b.locations.foreach { l =>
-       print(b(l))
-       if (l.x > 0 && l.x % (b.width - 1) == 0) println()
-     }
-
   val take = 1024
   val board = walls.take(take).foldLeft(in)((b, l) => b.update(l, '#'))
   board.draw()

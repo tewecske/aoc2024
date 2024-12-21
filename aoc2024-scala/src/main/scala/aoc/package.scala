@@ -1,6 +1,7 @@
 package aoc
 import scala.language.implicitConversions
 import scala.collection.immutable.TreeMap
+import scala.collection.AbstractIterator
 
 extension (self: Long)
   inline def >=<(n: Long): Boolean       = self >= 0 && self < n
@@ -34,6 +35,10 @@ extension (self: Board)
   def update(loc: Loc, c: Char): Vector[String] =
     self.updated(loc.y.toInt, self(loc.y.toInt).updated(loc.x.toInt, c))
 
+  def draw() = 
+    self.foreach(println)
+
+
 enum Dir(val dx: Long, val dy: Long):
   def cw: Dir             = Dir.fromOrdinal((ordinal + 2) % Dir.values.length)
   def ccw: Dir            = Dir.fromOrdinal((ordinal + Dir.values.length - 2) % Dir.values.length)
@@ -59,6 +64,8 @@ object Dir:
   implicit def toVec(dir: Dir): Vec = dir * 1
 
 val CardinalDirections: Vector[Dir] = Vector(Dir.N, Dir.E, Dir.S, Dir.W)
+val HorizontalDirections: Vector[Dir] = Vector(Dir.E, Dir.W)
+val VerticalDirections: Vector[Dir] = Vector(Dir.N, Dir.S)
 
 val OrdinalDirections: Vector[Dir] = Vector(Dir.NE, Dir.SE, Dir.SW, Dir.NW)
 
@@ -82,6 +89,8 @@ final case class Loc(x: Long, y: Long):
   inline def >=<(w: Long, h: Long): Boolean = x >=< w && y >=< h
 
   def adjacents: Vector[Loc] = CardinalDirections.map(this + _)
+  def horizontals: Vector[Loc] = HorizontalDirections.map(this + _)
+  def verticals: Vector[Loc] = VerticalDirections.map(this + _)
 
   def manhattan(l: Loc): Long = (l.x - x).abs + (l.y - y).abs
 
@@ -99,6 +108,14 @@ final case class Vec(direction: Dir, magnitude: Long):
   inline def +(addend: Long): Vec     = copy(magnitude = magnitude + addend)
   inline def -(subtrahend: Long): Vec = copy(magnitude = magnitude - subtrahend)
   inline def *(multiplier: Long): Vec = copy(magnitude = magnitude * multiplier)
+
+
+extension [A](self: Iterator[A])
+  def nth(n: Int): A                                       = self.drop(n).next
+  def findMap[B](f: A => Option[B]): B                     = self.flatMap(f).next()
+  def findCollect[B](f: PartialFunction[A, B]): B          = findMap(f.lift)
+  def foldMap[B: Numeric](f: A => B): B                    = self.map(f).sum
+  def foldCollect[B: Numeric](f: PartialFunction[A, B]): B = self.flatMap(f.lift).sum
 
 
 type PriorityQueue[K, V] = TreeMap[K, Vector[V]]
