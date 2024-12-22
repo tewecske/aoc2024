@@ -112,68 +112,61 @@ def day21part1(codes: Vector[(String, Vector[Loc])]): Long = {
     (a1, a2) => cache.getOrElseUpdate((a1, a2), f(a1, a2))
 
   case class Search(keypad: Map[Loc, Char]):
-    def search(start: Loc, finish: Loc): Option[State] = memoize(inner)(start, finish)
+    def search(start: Loc, finish: Loc): Set[State] = memoize(inner)(start, finish)
 
-    def inner(start: Loc, finish: Loc): Option[State] =
+    def inner(start: Loc, finish: Loc): Set[State] =
       val visited = mutable.Set(start)
-      def loop(queue: PriorityQueue[Int, State]): Option[State] =
+      val paths = mutable.Set.empty[State]
+      def loop(queue: PriorityQueue[Int, State]): Set[State] =
         // println(s"QUEUE: ${queue.headOption}")
-        if (queue.isEmpty) None
-        else if (queue.firstValue.loc == finish) queue.firstValues.headOption
+        if (queue.isEmpty) paths.toSet
         else
+          if (queue.firstValue.loc == finish) paths ++ queue.firstValues.headOption
           val (current, rest) = queue.dequeue
-          val (adjacent1, adjacent2) = DirectionSymbols.partition((dir, _) => dir == Dir.NW)
+          val (adjacent1, adjacent2) = DirectionSymbols.partition((dir, s) => current.path.headOption.exists(_._2 == s))
           val adj1 = adjacent1.map((d, s) => (current.loc + d, s))
             .filter((loc, _) => keypad.get(loc).isDefined && !visited(loc)).map((loc, s) => State(loc, current.path :+ (loc, s)))
           val adj2 = adjacent2.map((d, s) => (current.loc + d, s))
             .filter((loc, _) => keypad.get(loc).isDefined && !visited(loc)).map((loc, s) => State(loc, current.path :+ (loc, s)))
-          loop(rest.enqueueAll(adj2).enqueueAll(adj1))
+          loop(rest.enqueueAll(adj1).enqueueAll(adj2))
       loop(PriorityQueue(State(start, Vector.empty))) // Not valid dir :)
 
   val numericSearch = Search(numericBoard)
   val directionalSearch = Search(directionalBoard)
 
-  def numericMoves(code: Vector[Loc]): State =
-    val resultRobot = code.foldLeft(State(numeric('A'), Vector.empty)) { (lastState, nextLoc) =>
+  def numericMoves(code: Vector[Loc]): Set[State] =
+    val resultRobot = code.foldLeft(Set(State(numeric('A'), Vector.empty))) { (lastStates, nextLoc) =>
       // println(s"robot1 lastState: $lastState, nextLoc: $nextLoc")
-      val endState = numericSearch.search(lastState.loc, nextLoc).get
-      val finalState = endState.copy(path = endState.path.appended((endState.path.last._1, 'A')))
-      lastState.merge(finalState)
+      lastStates.flatMap { lastState =>
+        val endStates = numericSearch.search(lastState.loc, nextLoc)
+        val finalStates = endStates.map(endState => endState.copy(path = endState.path.appended((endState.path.last._1, 'A'))))
+        finalStates.map(finalState => lastState.merge(finalState))
+      }
     }
-    println(resultRobot.path.map(_._2).mkString)
+    println(resultRobot.map(_.path.map(_._2)).mkString)
     resultRobot
 
-  def robot(prevResult: State): State =
-    val inputRobot = prevResult.path.map(p => directional(p._2))
-    val resultRobot = inputRobot.foldLeft(State(directional('A'), Vector.empty)) { (lastState, nextLoc) =>
-      // println(s"robot2 lastState: $lastState, nextLoc: $nextLoc")
-      val endState = directionalSearch.search(lastState.loc, nextLoc).get
-      val finalState = endState.copy(path = endState.path.appended((endState.path.lastOption.map(_._1).getOrElse(lastState.loc), 'A')))
-      lastState.merge(finalState)
+  def robot(prevResults: Set[State]): Set[State] =
+    val inputsRobot = prevResults.map(prevResult => prevResult.path.map(p => directional(p._2)))
+    val resultsRobot = inputsRobot.flatMap { inputRobot => 
+      inputRobot.foldLeft(Set(State(directional('A'), Vector.empty))) { (lastStates, nextLoc) =>
+        // println(s"robot2 lastState: $lastState, nextLoc: $nextLoc")
+        lastStates.flatMap { lastState =>
+          val endStates = directionalSearch.search(lastState.loc, nextLoc)
+          val finalStates = endStates.map(endState => endState.copy(path = endState.path.appended((endState.path.lastOption.map(_._1).getOrElse(lastState.loc), 'A'))))
+          finalStates.map(finalState => lastState.merge(finalState))
+        }
+      }
     }
-    println(resultRobot.path.map(_._2).mkString)
-    resultRobot
+    println(resultsRobot.map(_.path.map(_._2)).mkString)
+    resultsRobot
 
-// my: <A^A^^>AvvvA
-// ex: <A^A>^^AvvvA
-// my: v<<A>^>A<A>A<AA>vA^Av<AAA^>A
-// ex: v<<A>>^A<A>AvA<^AA>A<vAAA>^A
-// my: v<A<AA>^>AvA^<A>vA^Av<<A>^>AvA^Av<<A>^>AAvA<A^>A<A>Av<A<A>^>AAA<A>vA^A
-// ex: <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
-
-
-  // 029A: <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
-  //       v<A<AA>^>AvA^<A>vA^Av<<A>^>AvA^Av<<A>^>AAvA<A^>A<A>Av<A<A>^>AAA<A>vA^A
-  // 980A: <v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A
-  // 179A: <v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A
-  // 456A: <v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A
-  // 379A: <v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A
 
   val r1 = codes.map((code, codeLocs) =>
     (code, robot(robot(numericMoves(codeLocs))))
     ).map { case (code, moves) =>
       val codeNum = code.replaceAll("^0|A", "")
-      val movesLength = moves.path.size
+      val movesLength = moves.map(_.path.size).min
       println(s"codeNum: $codeNum, movesLength: $movesLength")
       codeNum.toInt * movesLength
     }.sum
